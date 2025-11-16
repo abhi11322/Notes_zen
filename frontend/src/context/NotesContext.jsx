@@ -10,42 +10,55 @@ export const NotesProvider = ({ children }) => {
 
   const API = "http://localhost:5000/api/notes";
 
-  // GET Notes for Current User
+  // GET Notes
   const fetchNotes = async () => {
     if (!user) return;
 
-    const res = await axios.get(`${API}/getNotes`, {
-      params: { userId: user.uid },
-    });
-
-    setNotes(res.data);
+    try {
+      const res = await axios.get(`${API}/${user.uid}`);
+      setNotes(res.data);
+    } catch (err) {
+      console.error("Fetch notes error:", err);
+    }
   };
 
   // CREATE Note
   const addNote = async (title, content) => {
-    const res = await axios.post(`${API}/create`, {
-      title,
-      content,
-      userId: user.uid,
-    });
-
-    setNotes([res.data, ...notes]);
+    try {
+      const res = await axios.post(`${API}/create`, {
+        title,
+        content,
+        userId: user.uid,
+      });
+      setNotes((prev) => [res.data, ...prev]);
+    } catch (err) {
+      console.error("Add note error:", err);
+    }
   };
 
   // UPDATE Note
   const updateNote = async (id, title, content) => {
-    const res = await axios.put(`${API}/updateNote/${id}`, {
-      title,
-      content,
-    });
-
-    setNotes(notes.map(n => n._id === id ? res.data : n));
+    try {
+      const res = await axios.put(`${API}/updateNote/${id}`, {
+        title,
+        content,
+      });
+      setNotes((prev) =>
+        prev.map((n) => (n._id === id ? res.data : n))
+      );
+    } catch (err) {
+      console.error("Update note error:", err);
+    }
   };
 
   // DELETE Note
   const deleteNote = async (id) => {
-    await axios.delete(`${API}/deleteNote/${id}`);
-    setNotes(notes.filter(n => n._id !== id));
+    try {
+      await axios.delete(`${API}/${id}`);
+      setNotes((prev) => prev.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error("Delete note error:", err);
+    }
   };
 
   return (
