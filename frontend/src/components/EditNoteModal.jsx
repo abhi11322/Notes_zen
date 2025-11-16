@@ -15,12 +15,7 @@ export default function EditNoteModal() {
   }, [window.currentNote]);
 
   const handleUpdate = async () => {
-    await updateNote(
-      window.currentNote._id,
-      title,
-      content
-    );
-
+    await updateNote(window.currentNote._id, title, content);
     document.getElementById("edit-modal").close();
   };
 
@@ -52,3 +47,4 @@ export default function EditNoteModal() {
     </dialog>
   );
 }
+

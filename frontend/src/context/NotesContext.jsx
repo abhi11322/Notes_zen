@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 import axios from "axios";
 import { useAuth } from "./AuthContext";
 
@@ -10,6 +10,7 @@ export const NotesProvider = ({ children }) => {
 
   const API = "http://localhost:5000/api/notes";
 
+  // GET Notes for Current User
   const fetchNotes = async () => {
     if (!user) return;
 
@@ -20,8 +21,9 @@ export const NotesProvider = ({ children }) => {
     setNotes(res.data);
   };
 
+  // CREATE Note
   const addNote = async (title, content) => {
-    const res = await axios.post(`${API}/createNote`, {
+    const res = await axios.post(`${API}/create`, {
       title,
       content,
       userId: user.uid,
@@ -30,30 +32,29 @@ export const NotesProvider = ({ children }) => {
     setNotes([res.data, ...notes]);
   };
 
+  // UPDATE Note
   const updateNote = async (id, title, content) => {
-  const res = await axios.put(`${API}/updateNote/${id}`, {
-    title,
-    content,
-  });
+    const res = await axios.put(`${API}/updateNote/${id}`, {
+      title,
+      content,
+    });
 
-  setNotes(
-    notes.map(n => n._id === id ? res.data : n)
-  );
+    setNotes(notes.map(n => n._id === id ? res.data : n));
+  };
 
-};
-
-
+  // DELETE Note
   const deleteNote = async (id) => {
     await axios.delete(`${API}/deleteNote/${id}`);
-    setNotes(notes.filter((n) => n._id !== id));
+    setNotes(notes.filter(n => n._id !== id));
   };
 
   return (
-    <NotesContext.Provider value={{ notes, fetchNotes, addNote, deleteNote, updateNote }}>
+    <NotesContext.Provider
+      value={{ notes, fetchNotes, addNote, updateNote, deleteNote }}
+    >
       {children}
     </NotesContext.Provider>
   );
-  
 };
 
 export const useNotes = () => useContext(NotesContext);

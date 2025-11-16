@@ -3,8 +3,10 @@ import { useNotes } from "../context/NotesContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { motion } from "framer-motion";
-import { FiPlus, FiLogOut, FiTrash2, FiSearch } from "react-icons/fi";
+import { FiPlus, FiLogOut, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+
 import AddNoteModal from "../components/AddNoteModal";
+import EditNoteModal from "../components/EditNoteModal";
 
 export default function Home() {
   const { notes, fetchNotes, deleteNote } = useNotes();
@@ -41,7 +43,7 @@ export default function Home() {
       {/* Notes Area */}
       <div className="flex-1 p-8 overflow-y-auto">
         
-        {/* Search */}
+        {/* Search Bar */}
         <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow mb-6">
           <FiSearch className="text-gray-500" />
           <input 
@@ -60,7 +62,9 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {notes
-              .filter((n) => n.title.toLowerCase().includes(search.toLowerCase()))
+              .filter((n) =>
+                n.title.toLowerCase().includes(search.toLowerCase())
+              )
               .map((note) => (
                 <motion.div
                   key={note._id}
@@ -71,7 +75,20 @@ export default function Home() {
                   <h2 className="text-lg font-bold">{note.title}</h2>
                   <p className="text-gray-600 mt-2">{note.content}</p>
 
-                  <div className="flex justify-end mt-4">
+                  <div className="flex justify-between mt-4">
+                    {/* Edit Button */}
+                    <button
+                      className="text-blue-600 flex items-center gap-1"
+                      onClick={() => {
+                        window.currentNote = note;
+                        document.getElementById("edit-modal").showModal();
+                      }}
+                    >
+                      <FiEdit2 />
+                      Edit
+                    </button>
+
+                    {/* Delete Button */}
                     <button
                       className="text-red-600 flex items-center gap-1"
                       onClick={() => deleteNote(note._id)}
@@ -87,7 +104,9 @@ export default function Home() {
         )}
       </div>
 
+      {/* Modals */}
       <AddNoteModal />
+      <EditNoteModal />
     </div>
   );
 }
