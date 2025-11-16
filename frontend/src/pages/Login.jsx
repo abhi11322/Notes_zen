@@ -1,60 +1,80 @@
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
-import { googleProvider } from "../firebase";
+import { auth, googleProvider } from "../firebase";
+import { signInWithEmailAndPassword, signInWithPopup } from "firebase/auth";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const loginUser = async () => {
     await signInWithEmailAndPassword(auth, email, password);
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (error) {
-      console.log(error);
-    }
+  const googleLogin = async () => {
+    await signInWithPopup(auth, googleProvider);
   };
 
   return (
-    <div className="flex h-screen justify-center items-center bg-gray-100">
-      <form className="bg-white p-6 rounded shadow-md" onSubmit={handleLogin}>
-        <h2 className="text-xl font-semibold mb-4">Login</h2>
+    <div className="h-screen flex items-center justify-center bg-gray-100 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md"
+      >
+        <h2 className="text-3xl font-bold mb-8 text-gray-800 text-center">
+          Welcome Back
+        </h2>
 
-        <input
-          type="email"
-          className="border p-2 w-full mb-3"
-          placeholder="Email"
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {/* Email */}
+        <div className="flex items-center bg-gray-50 p-3 rounded-xl mb-4 border">
+          <FiMail className="text-gray-400 text-xl mr-3" />
+          <input
+            type="email"
+            placeholder="Email"
+            className="bg-transparent w-full outline-none"
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
 
-        <input
-          type="password"
-          className="border p-2 w-full mb-3"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        {/* Password */}
+        <div className="flex items-center bg-gray-50 p-3 rounded-xl mb-6 border">
+          <FiLock className="text-gray-400 text-xl mr-3" />
+          <input
+            type="password"
+            placeholder="Password"
+            className="bg-transparent w-full outline-none"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-        <button className="bg-blue-600 text-white px-4 py-2 rounded w-full">
+        {/* Login Button */}
+        <button
+          onClick={loginUser}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+        >
+          <FiLogIn />
           Login
         </button>
+
+        {/* Google Login */}
         <button
-          type="button"
-          onClick={handleGoogleLogin}
-          className="bg-red-600 text-white px-4 py-2 rounded w-full mt-3"
+          onClick={googleLogin}
+          className="w-full bg-white border mt-4 py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:bg-gray-50"
         >
+          <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5" />
           Sign in with Google
         </button>
-        <Link className="text-blue-600 underline" to="/signup">
-          Don’t have an account? Sign up
-        </Link>
-      </form>
+
+        <p className="mt-6 text-center text-gray-500">
+          Don’t have an account?{" "}
+          <Link className="text-blue-600 font-semibold" to="/signup">
+            Sign up
+          </Link>
+        </p>
+      </motion.div>
     </div>
   );
 }

@@ -30,11 +30,9 @@ export const deleteNote = async (req, res) => {
 
 export const updateNote = async (req, res) => {
   try {
-    const { title, content } = req.body;
-
     const updated = await Note.findByIdAndUpdate(
       req.params.id,
-      { title, content },
+      req.body,  
       { new: true }
     );
 

@@ -10,7 +10,7 @@ export const NotesProvider = ({ children }) => {
 
   const API = "http://localhost:5000/api/notes";
 
-  // GET Notes
+  
   const fetchNotes = async () => {
     if (!user) return;
 
@@ -22,13 +22,16 @@ export const NotesProvider = ({ children }) => {
     }
   };
 
-  // CREATE Note
+ 
   const addNote = async (title, content) => {
     try {
       const res = await axios.post(`${API}/create`, {
+        
         title,
         content,
         userId: user.uid,
+        color: "#fff8b3",      
+        pinned: false
       });
       setNotes((prev) => [res.data, ...prev]);
     } catch (err) {
@@ -36,7 +39,7 @@ export const NotesProvider = ({ children }) => {
     }
   };
 
-  // UPDATE Note
+  
   const updateNote = async (id, title, content) => {
     try {
       const res = await axios.put(`${API}/updateNote/${id}`, {
@@ -51,7 +54,7 @@ export const NotesProvider = ({ children }) => {
     }
   };
 
-  // DELETE Note
+  
   const deleteNote = async (id) => {
     try {
       await axios.delete(`${API}/${id}`);
@@ -61,9 +64,35 @@ export const NotesProvider = ({ children }) => {
     }
   };
 
+  const updateColor = async (id, color) => {
+  try {
+    const res = await axios.put(`${API}/updateNote/${id}`, { color });
+    setNotes((prev) =>
+      prev.map((note) => (note._id === id ? res.data : note))
+    );
+  } catch (err) {
+    console.error("Color update error:", err);
+  }
+};
+
+const togglePin = async (id, pinned) => {
+  try {
+    const res = await axios.put(`${API}/updateNote/${id}`, { pinned });
+    setNotes((prev) => {
+      const updated = prev.map((n) => (n._id === id ? res.data : n));
+      // Sort pinned notes on top
+      return updated.sort((a, b) => b.pinned - a.pinned);
+    });
+  } catch (err) {
+    console.error("Pin update error:", err);
+  }
+};
+
+
+
   return (
     <NotesContext.Provider
-      value={{ notes, fetchNotes, addNote, updateNote, deleteNote }}
+      value={{ notes, fetchNotes, addNote, updateNote, deleteNote,togglePin,updateColor }}
     >
       {children}
     </NotesContext.Provider>
