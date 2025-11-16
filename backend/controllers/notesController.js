@@ -27,3 +27,20 @@ export const deleteNote = async (req, res) => {
         res.status(500).json({message: "Server Error"});
     }
 };
+
+export const updateNote = async (req, res) => {
+  try {
+    const { title, content } = req.body;
+
+    const updated = await Note.findByIdAndUpdate(
+      req.params.id,
+      { title, content },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
