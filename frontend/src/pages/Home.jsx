@@ -3,6 +3,7 @@ import { useNotes } from "../context/NotesContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { motion } from "framer-motion";
+import { useTheme } from "../context/ThemeContext";
 
 import {
   FiPlus,
@@ -11,6 +12,8 @@ import {
   FiTrash2,
   FiSearch,
   FiStar,
+  FiSun,
+  FiMoon,
 } from "react-icons/fi";
 
 import AddNoteModal from "../components/AddNoteModal";
@@ -18,6 +21,7 @@ import EditNoteModal from "../components/EditNoteModal";
 
 export default function Home() {
   const { notes, fetchNotes, deleteNote, togglePin, updateColor } = useNotes();
+  const { theme, toggleTheme } = useTheme();
 
   const [search, setSearch] = useState("");
   const [selectedNote, setSelectedNote] = useState(null);
@@ -27,14 +31,23 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="h-screen w-full flex bg-gray-50">
+    <div className="h-screen w-full flex bg-gray-50 dark:bg-gray-900 dark:text-gray-200 transition-all">
+      
       {/* ---------- SIDEBAR ---------- */}
       <motion.div
         initial={{ x: -50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        className="w-64 bg-white border-r shadow-lg p-6 flex flex-col"
+        className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 shadow-lg p-6 flex flex-col relative"
       >
-        <h1 className="text-3xl font-bold tracking-tight mb-10 text-gray-800">
+        {/* THEME TOGGLE */}
+        <button
+          onClick={toggleTheme}
+          className="absolute top-4 right-4 text-gray-700 dark:text-gray-200"
+        >
+          {theme === "dark" ? <FiSun size={22} /> : <FiMoon size={22} />}
+        </button>
+
+        <h1 className="text-3xl font-bold tracking-tight mb-10 text-gray-800 dark:text-gray-100">
           Notes
         </h1>
 
@@ -49,7 +62,7 @@ export default function Home() {
         <div className="mt-auto">
           <button
             onClick={() => signOut(auth)}
-            className="flex items-center gap-2 text-red-600 hover:text-red-700 font-medium mt-16"
+            className="flex items-center gap-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-500 font-medium mt-16"
           >
             <FiLogOut size={20} />
             Logout
@@ -65,12 +78,12 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-xl mx-auto mb-10"
         >
-          <div className="flex items-center gap-3 p-4 bg-white rounded-2xl shadow focus-within:ring-2 focus-within:ring-blue-400 transition-all">
-            <FiSearch className="text-gray-500 text-xl" />
+          <div className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow focus-within:ring-2 focus-within:ring-blue-400 dark:focus-within:ring-blue-600 transition-all">
+            <FiSearch className="text-gray-500 dark:text-gray-300 text-xl" />
             <input
               placeholder="Search notes…"
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-transparent outline-none text-gray-700"
+              className="w-full bg-transparent outline-none text-gray-700 dark:text-gray-200"
             />
           </div>
         </motion.div>
@@ -78,7 +91,7 @@ export default function Home() {
         {/* ---------- PINNED NOTES ---------- */}
         {notes.some((n) => n.pinned) && (
           <>
-            <h2 className="text-xl font-semibold text-gray-700 mb-3">
+            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">
               📌 Pinned
             </h2>
 
@@ -106,7 +119,7 @@ export default function Home() {
         )}
 
         {/* ---------- ALL NOTES ---------- */}
-        <h2 className="text-xl font-semibold text-gray-700 mb-3">
+        <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">
           All Notes
         </h2>
 
@@ -114,7 +127,7 @@ export default function Home() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center text-gray-500 mt-40 text-xl"
+            className="text-center text-gray-500 dark:text-gray-400 mt-40 text-xl"
           >
             No notes yet. Create your first one ✨
           </motion.p>
@@ -170,18 +183,20 @@ function NoteCard({ note, setSelectedNote, deleteNote, togglePin, updateColor })
         <FiStar
           size={22}
           className={
-            note.pinned ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"
+            note.pinned
+              ? "text-yellow-500"
+              : "text-gray-600 hover:text-yellow-500"
           }
         />
       </button>
 
       {/* TITLE */}
-      <h2 className="text-xl font-semibold text-gray-800 mb-2">
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">
         {note.title}
       </h2>
 
       {/* CONTENT */}
-      <p className="text-gray-700 mb-5 whitespace-pre-wrap font-light">
+      <p className="text-gray-800 mb-5 whitespace-pre-wrap">
         {note.content}
       </p>
 
@@ -219,3 +234,4 @@ function NoteCard({ note, setSelectedNote, deleteNote, togglePin, updateColor })
     </motion.div>
   );
 }
+
