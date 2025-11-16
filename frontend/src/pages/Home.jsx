@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import { useNotes } from "../context/NotesContext";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 
 import {
   FiPlus,
   FiLogOut,
-  FiEdit2,
   FiTrash2,
   FiSearch,
   FiStar,
@@ -26,16 +25,21 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [selectedNote, setSelectedNote] = useState(null);
 
+  // Fetch notes on load
   useEffect(() => {
     fetchNotes();
   }, []);
 
+  const matchSearch = (note) =>
+    note.title.toLowerCase().includes(search.toLowerCase()) ||
+    note.content.toLowerCase().includes(search.toLowerCase());
+
   return (
     <div className="h-screen w-full flex bg-gray-50 dark:bg-gray-900 dark:text-gray-200 transition-all">
-      
+
       {/* ---------- SIDEBAR ---------- */}
       <motion.div
-        initial={{ x: -50, opacity: 0 }}
+        initial={{ x: -40, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 shadow-lg p-6 flex flex-col relative"
       >
@@ -47,7 +51,7 @@ export default function Home() {
           {theme === "dark" ? <FiSun size={22} /> : <FiMoon size={22} />}
         </button>
 
-        <h1 className="text-3xl font-bold tracking-tight mb-10 text-gray-800 dark:text-gray-100">
+        <h1 className="text-3xl font-bold mb-10 text-gray-900 dark:text-gray-100">
           Notes
         </h1>
 
@@ -70,8 +74,9 @@ export default function Home() {
         </div>
       </motion.div>
 
-      {/* ---------- MAIN CONTENT ---------- */}
+      {/* ---------- MAIN AREA ---------- */}
       <div className="flex-1 p-10 overflow-y-auto">
+
         {/* SEARCH BAR */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
@@ -88,8 +93,8 @@ export default function Home() {
           </div>
         </motion.div>
 
-        {/* ---------- PINNED NOTES ---------- */}
-        {notes.some((n) => n.pinned) && (
+        {/* ---------- PINNED ---------- */}
+        {notes.some((n) => n.pinned && matchSearch(n)) && (
           <>
             <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">
               📌 Pinned
@@ -100,10 +105,7 @@ export default function Home() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-10"
             >
               {notes
-                .filter((n) => n.pinned)
-                .filter((n) =>
-                  n.title.toLowerCase().includes(search.toLowerCase())
-                )
+                .filter((n) => n.pinned && matchSearch(n))
                 .map((note) => (
                   <NoteCard
                     key={note._id}
@@ -138,9 +140,7 @@ export default function Home() {
           >
             {notes
               .filter((n) => !n.pinned)
-              .filter((n) =>
-                n.title.toLowerCase().includes(search.toLowerCase())
-              )
+              .filter(matchSearch)
               .map((note) => (
                 <NoteCard
                   key={note._id}
@@ -157,27 +157,42 @@ export default function Home() {
 
       {/* MODALS */}
       <AddNoteModal />
-      <EditNoteModal selectedNote={selectedNote} />
+
+      <AnimatePresence>
+        {selectedNote && (
+          <EditNoteModal
+            selectedNote={selectedNote}
+            closeModal={() => setSelectedNote(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 /* ----------------------------------------------------------
-    NOTE CARD COMPONENT
+   NOTE CARD COMPONENT (With Expand Animation + Fixes)
 ---------------------------------------------------------- */
 function NoteCard({ note, setSelectedNote, deleteNote, togglePin, updateColor }) {
   return (
     <motion.div
-      layout
+      layoutId={note._id} // 🔥 MAGIC: connects card → modal animation
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.02 }}
-      className="rounded-2xl shadow p-5 relative transition-all"
+      className="rounded-2xl shadow p-5 relative transition-all h-56 overflow-hidden cursor-pointer"
       style={{ background: note.color || "#fff8b3" }}
+      onClick={() => {
+        setSelectedNote(note);
+        document.getElementById("edit-modal").showModal();
+      }}
     >
-      {/* PIN BUTTON */}
+      {/* PIN */}
       <button
-        onClick={() => togglePin(note._id, !note.pinned)}
+        onClick={(e) => {
+          e.stopPropagation();
+          togglePin(note._id, !note.pinned);
+        }}
         className="absolute top-3 right-3"
       >
         <FiStar
@@ -190,13 +205,12 @@ function NoteCard({ note, setSelectedNote, deleteNote, togglePin, updateColor })
         />
       </button>
 
-      {/* TITLE */}
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+      {/* TITLE & CONTENT */}
+      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-900 mb-2">
         {note.title}
       </h2>
 
-      {/* CONTENT */}
-      <p className="text-gray-800 mb-5 whitespace-pre-wrap">
+      <p className="text-gray-800 dark:text-gray-800 whitespace-pre-wrap line-clamp-4">
         {note.content}
       </p>
 
@@ -205,33 +219,26 @@ function NoteCard({ note, setSelectedNote, deleteNote, togglePin, updateColor })
         {["#fff8b3", "#ffd6e0", "#d7f9f1", "#d0e8ff", "#f5e2ff"].map((c) => (
           <button
             key={c}
-            onClick={() => updateColor(note._id, c)}
+            onClick={(e) => {
+              e.stopPropagation();
+              updateColor(note._id, c);
+            }}
             className="w-5 h-5 rounded-full border shadow"
             style={{ background: c }}
           />
         ))}
       </div>
 
-      {/* ACTION BUTTONS */}
-      <div className="flex justify-between mt-4">
-        <button
-          className="text-blue-600 flex items-center gap-1 hover:text-blue-800"
-          onClick={() => {
-            setSelectedNote(note);
-            document.getElementById("edit-modal").showModal();
-          }}
-        >
-          <FiEdit2 /> Edit
-        </button>
-
-        <button
-          className="text-red-600 flex items-center gap-1 hover:text-red-800"
-          onClick={() => deleteNote(note._id)}
-        >
-          <FiTrash2 /> Delete
-        </button>
-      </div>
+      {/* DELETE BUTTON */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          deleteNote(note._id);
+        }}
+        className="absolute bottom-3 right-3 text-red-600 hover:text-red-800"
+      >
+        <FiTrash2 size={20} />
+      </button>
     </motion.div>
   );
 }
-

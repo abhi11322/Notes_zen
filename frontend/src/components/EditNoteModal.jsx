@@ -1,82 +1,77 @@
 import { useState, useEffect } from "react";
-import { useNotes } from "../context/NotesContext";
-import { FiX } from "react-icons/fi";
 import { motion } from "framer-motion";
+import { FiX } from "react-icons/fi";
+import { useNotes } from "../context/NotesContext";
 
-export default function EditNoteModal({ selectedNote }) {
+export default function EditNoteModal({ selectedNote, closeModal }) {
   const { updateNote } = useNotes();
-
-  // 🚀 FIX 1 — Prevent modal from rendering when selectedNote is null
-  if (!selectedNote) return null;
 
   const [title, setTitle] = useState(selectedNote.title);
   const [content, setContent] = useState(selectedNote.content);
 
-  // Load old values when selectedNote changes
   useEffect(() => {
-    if (selectedNote) {
-      setTitle(selectedNote.title);
-      setContent(selectedNote.content);
-    }
+    setTitle(selectedNote.title);
+    setContent(selectedNote.content);
   }, [selectedNote]);
 
   const handleUpdate = async () => {
     await updateNote(selectedNote._id, title, content);
+    closeModal();
     document.getElementById("edit-modal").close();
   };
 
   return (
     <dialog id="edit-modal" className="modal">
-      <div className="modal-box p-0 bg-white rounded-2xl max-w-lg shadow-xl">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-xl font-semibold">Edit Note</h3>
+      {/* BLUR BACKGROUND */}
+      <motion.div
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={closeModal}
+      />
+
+      {/* ANIMATED EXPANDED NOTE */}
+      <motion.div
+        layoutId={selectedNote._id}
+        className="modal-box bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-xl w-full shadow-xl relative z-10"
+        initial={{ opacity: 0, scale: 0.85 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.85 }}
+        transition={{ duration: 0.25 }}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold">Edit Note</h3>
+
           <button
-            onClick={() => document.getElementById("edit-modal").close()}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={closeModal}
+            className="text-gray-600 dark:text-gray-300"
           >
-            <FiX size={22} />
+            <FiX size={24} />
           </button>
         </div>
 
-        {/* Body */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6"
-        >
-          <input
-            type="text"
-            value={title}
-            placeholder="Title"
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-400 outline-none"
-          />
+        <input
+          className="w-full p-3 border rounded-xl mb-4 dark:bg-gray-700 dark:text-white"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-          <textarea
-            value={content}
-            placeholder="Write your note..."
-            onChange={(e) => setContent(e.target.value)}
-            className="w-full mt-4 p-3 border rounded-xl h-40 resize-none focus:ring-2 focus:ring-blue-400 outline-none"
-          />
-        </motion.div>
+        <textarea
+          className="w-full p-3 border rounded-xl h-40 dark:bg-gray-700 dark:text-white"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t">
-          <button
-            onClick={() => document.getElementById("edit-modal").close()}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
-            Cancel
-          </button>
+        <div className="flex justify-end mt-6">
           <button
             onClick={handleUpdate}
-            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow"
+            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            Update Note
+            Update
           </button>
         </div>
-      </div>
+      </motion.div>
     </dialog>
   );
 }
